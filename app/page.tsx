@@ -1,44 +1,36 @@
+/* eslint-disable camelcase */
+import Link from 'next/link'
+
+import { client } from '@/apollo-client'
+import { get_all_therapies_queries } from '@/gql/queries/get-all-therapies'
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 async function getContent() {
-  const endpoint =
-    'https://api-sa-east-1.hygraph.com/v2/cloajnni2g3ho01ukd13k315d/master'
-
-  const query = `{
-    therapies() {
-      id
-      slug
-      createdAt
-      story { html }
-      publishedAt
-      updatedAt
-    }
-  }`
-
-  const options = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
-    next: { revalidate: 10 },
-  }
-
-  const response = await fetch(endpoint, options)
-
-  const { data } = await response.json()
+  const data = await client.query({ query: get_all_therapies_queries })
 
   return data
 }
 
 export default async function Home() {
-  const data = await getContent()
+  const { data } = await getContent()
 
   return (
-    <main className="mx-auto p-10 sm:max-w-[800px] text-zinc-800 text-xs sm:text-sm prose tracking-wide prose-strong:font-medium prose-strong:leading-10">
-      {data.therapies.map((item: { id: string; story: { html: any } }) => (
-        <div
-          key={item.id}
-          dangerouslySetInnerHTML={{ __html: item.story.html }}
-        ></div>
-      ))}
+    <main className="mx-auto sm:max-w-[800px] p-10 sm:p-5 sm:pt-10">
+      <h1 className="font-extrabold text-zinc-300 text-4xl -tracking-wider">
+        About me
+      </h1>
+
+      <ul className="mt-20">
+        {data.therapies.map(
+          (item: { id: string; title: string; slug: string }) => (
+            <li className="mb-5" key={item.id}>
+              <Link href={`/history/${item.slug}`}>
+                <p className="text-sm text-zinc-700">{item.title}</p>
+              </Link>
+            </li>
+          ),
+        )}
+      </ul>
     </main>
   )
 }
